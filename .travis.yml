@@ -8,18 +8,32 @@ python:
 - pypy
 - pypy3
 env:
-- PYMONGO=2.7
-- PYMONGO=2.8
-- PYMONGO=3.0
-- PYMONGO=dev
+- PYMONGO=2.7 MONGODB=2.6
+- PYMONGO=2.8 MONGODB=2.6
+- PYMONGO=3.0 MONGODB=2.6
+- PYMONGO=dev MONGODB=2.6
+- PYMONGO=2.7 MONGODB=3.0
+- PYMONGO=2.8 MONGODB=3.0
+- PYMONGO=3.0 MONGODB=3.0
+- PYMONGO=dev MONGODB=3.0
 matrix:
   fast_finish: true
 before_install:
-- travis_retry sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
-- echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' |
-  sudo tee /etc/apt/sources.list.d/mongodb.list
-- travis_retry sudo apt-get update
-- travis_retry sudo apt-get install mongodb-org-server
+- if [ $MONGODB = '2.6' ]; then
+  travis_retry sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 &&
+  echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' |
+    sudo tee /etc/apt/sources.list.d/mongodb.list &&
+  travis_retry sudo apt-get update &&
+  travis_retry sudo apt-get install mongodb-org-server;
+  fi
+- if [ $MONGODB = '3.0' ]; then
+  sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 &&
+  echo "deb http://repo.mongodb.org/apt/ubuntu "$(lsb_release -sc)"/mongodb-org/3.0 multiverse" |
+    sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list &&
+  travis_retry sudo apt-get update &&
+  travis_retry sudo apt-get install -y mongodb-org;
+  fi
+- mongo --version
 install:
 - sudo apt-get install python-dev python3-dev libopenjpeg-dev zlib1g-dev libjpeg-turbo8-dev
   libtiff4-dev libjpeg8-dev libfreetype6-dev liblcms2-dev libwebp-dev tcl8.5-dev tk8.5-dev
