@@ -34,7 +34,7 @@ before_install:
       sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list;
   fi
 - travis_retry sudo apt-get update
-- travis_retry sudo apt-get install -y mongodb-org=$MONGODB mongodb-org-server=$MONGODB |
+- travis_retry sudo apt-get install -y mongodb-org=$MONGODB mongodb-org-server=$MONGODB
     mongodb-org-shell=$MONGODB mongodb-org-mongos=$MONGODB mongodb-org-tools=$MONGODB
 - mongo --version
 install:
