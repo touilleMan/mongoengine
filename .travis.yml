@@ -8,37 +8,34 @@ python:
 - pypy
 - pypy3
 env:
-- PYMONGO=2.7 MONGODB=2.6
-- PYMONGO=2.8 MONGODB=2.6
-- PYMONGO=3.0 MONGODB=2.6
-- PYMONGO=dev MONGODB=2.6
-- PYMONGO=2.7 MONGODB=3.0
-- PYMONGO=2.8 MONGODB=3.0
-- PYMONGO=3.0 MONGODB=3.0
-- PYMONGO=dev MONGODB=3.0
+- PYMONGO=2.7 MONGODB=2.6.6
+- PYMONGO=2.8 MONGODB=2.6.6
+- PYMONGO=3.0 MONGODB=2.6.6
+- PYMONGO=dev MONGODB=2.6.6
+- PYMONGO=2.7 MONGODB=3.0.4
+- PYMONGO=2.8 MONGODB=3.0.4
+- PYMONGO=3.0 MONGODB=3.0.4
+- PYMONGO=dev MONGODB=3.0.4
 matrix:
   fast_finish: true
   include:
   - python: "2.7"
-    env: PYMONGO=3.0 MONGODB=2.4
+    env: PYMONGO=3.0 MONGODB=2.4.14
   - python: "3.4"
-    env: PYMONGO=3.0 MONGODB=2.4
+    env: PYMONGO=3.0 MONGODB=2.4.14
 before_install:
-- if [ $MONGODB = '2.6' -o $MONGODB = '2.4' ]; then
-  travis_retry sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 &&
-  echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' |
-    sudo tee /etc/apt/sources.list.d/mongodb.list &&
-  travis_retry sudo apt-get update &&
-  travis_retry sudo apt-get install -y mongodb-org=$MONGODB mongodb-org-server=$MONGODB |
+- if [ `echo $MONGODB | sed -e 's/\(.\).*/\1/'` = '2' ]; then
+    travis_retry sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 &&
+    echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' |
+      sudo tee /etc/apt/sources.list.d/mongodb.list;
+  else
+    sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 &&
+    echo "deb http://repo.mongodb.org/apt/ubuntu "$(lsb_release -sc)"/mongodb-org/3.0 multiverse" |
+      sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list;
+  fi
+- travis_retry sudo apt-get update &&
+- travis_retry sudo apt-get install -y mongodb-org=$MONGODB mongodb-org-server=$MONGODB |
     mongodb-org-shell=$MONGODB mongodb-org-mongos=$MONGODB mongodb-org-tools=$MONGODB;
-  fi
-- if [ $MONGODB = '3.0' ]; then
-  sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 &&
-  echo "deb http://repo.mongodb.org/apt/ubuntu "$(lsb_release -sc)"/mongodb-org/3.0 multiverse" |
-    sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list &&
-  travis_retry sudo apt-get update &&
-  travis_retry sudo apt-get install -y mongodb-org;
-  fi
 - mongo --version
 install:
 - sudo apt-get install python-dev python3-dev libopenjpeg-dev zlib1g-dev libjpeg-turbo8-dev
