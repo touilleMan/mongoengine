@@ -24,7 +24,7 @@ before_install:
   echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' |
     sudo tee /etc/apt/sources.list.d/mongodb.list &&
   travis_retry sudo apt-get update &&
-  travis_retry sudo apt-get install mongodb-org-server;
+  travis_retry sudo apt-get install mongodb-org;
   fi
 - if [ $MONGODB = '3.0' ]; then
   sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 &&
