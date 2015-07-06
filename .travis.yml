@@ -24,20 +24,20 @@ matrix:
   - python: "3.4"
     env: PYMONGO=3.0 MONGODB=2.4.14
 before_install:
-- if [ `echo $MONGODB | sed -e 's/\(.\).*/\1/'` = '2' ]; then # mongoDB 2.x
+- if [ `echo $MONGODB | sed -e 's/\(.\).*/\1/'` = '2' ]; then
     travis_retry sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 &&
     echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' |
       sudo tee /etc/apt/sources.list.d/mongodb.list &&
     travis_retry sudo apt-get update &&
-    if [ `echo $MONGODB | sed -e 's/.\.\(.\).*/\1/'` = '4' ]; then # mongoDB 2.4
+    if [ `echo $MONGODB | sed -e 's/.\.\(.\).*/\1/'` = '4' ]; then
       travis_retry sudo apt-get install -y mongodb-10gen=$MONGODB;
-    else # mongoDB 2.6
+    else
       travis_retry sudo apt-get install -y mongodb-org=$MONGODB;
     fi
-  else # mongoDB 3.x
+  else
     sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 &&
     echo "deb http://repo.mongodb.org/apt/ubuntu "$(lsb_release -sc)"/mongodb-org/3.0 multiverse" |
-      sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list;
+      sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list &&
     travis_retry sudo apt-get update &&
     travis_retry sudo apt-get install -y mongodb-org=$MONGODB;
   fi
@@ -53,10 +53,6 @@ script:
 after_script: coveralls --verbose
 notifications:
   irc: irc.freenode.org#mongoengine
-#branches:
-#  only:
-#  - master
-#  - /^v.*$/
 deploy:
   provider: pypi
   user: the_drow
