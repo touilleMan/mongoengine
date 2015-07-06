@@ -45,10 +45,10 @@ script:
 after_script: coveralls --verbose
 notifications:
   irc: irc.freenode.org#mongoengine
-branches:
-  only:
-  - master
-  - /^v.*$/
+#branches:
+#  only:
+#  - master
+#  - /^v.*$/
 deploy:
   provider: pypi
   user: the_drow
@@ -57,4 +57,3 @@ deploy:
   on:
     tags: true
     repo: MongoEngine/mongoengine
-
