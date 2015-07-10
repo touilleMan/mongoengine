@@ -481,6 +481,34 @@ class FieldTest(unittest.TestCase):
         actual = list(Person.objects().scalar('btc'))
         self.assertEqual(expected, actual)
 
+    def test_decimal_force_string(self):
+        class Person(Document):
+            btc = DecimalField(precision=4, force_string=True)
+
+        Person.drop_collection()
+        Person(btc=10).save()
+        Person(btc=10.1).save()
+        Person(btc=10.11).save()
+        Person(btc="10.111").save()
+        Person(btc=Decimal("10.1111")).save()
+        Person(btc=Decimal("10.11111")).save()
+
+        # How its stored
+        expected = [{'btc': '10.0000'}, {'btc': '10.1000'}, {'btc': '10.1100'},
+                    {'btc': '10.1110'}, {'btc': '10.1111'}, {'btc': '10.1111'}]
+        expected = [{'btc': '10.0000'}]
+        actual = list(Person.objects.exclude('id').as_pymongo())
+        self.assertEqual(expected, actual)
+
+        # Test as well setting on existing object
+        Person.drop_collection()
+        for value in (10, 10.1, 10.11, "10.111", "10.1111", "10.11111"):
+            p = Person().save()
+            p.btc = value
+            p.save()
+        actual = list(Person.objects.exclude('id').as_pymongo())
+        self.assertEqual(expected, actual)
+
     def test_boolean_validation(self):
         """Ensure that invalid values cannot be assigned to boolean fields.
         """
