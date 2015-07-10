@@ -496,7 +496,6 @@ class FieldTest(unittest.TestCase):
         # How its stored
         expected = [{'btc': '10.0000'}, {'btc': '10.1000'}, {'btc': '10.1100'},
                     {'btc': '10.1110'}, {'btc': '10.1111'}, {'btc': '10.1111'}]
-        expected = [{'btc': '10.0000'}]
         actual = list(Person.objects.exclude('id').as_pymongo())
         self.assertEqual(expected, actual)
 

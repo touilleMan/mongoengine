@@ -185,6 +185,8 @@ class BaseDocument(object):
                 self__created and name == self._meta.get('id_field')):
             super(BaseDocument, self).__setattr__('_created', False)
 
+        if value is not None and name in self._fields:
+            value = self._fields[name].to_python(value)
         super(BaseDocument, self).__setattr__(name, value)
 
     def __getstate__(self):
