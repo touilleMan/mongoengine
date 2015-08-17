@@ -422,5 +422,70 @@ class OnlyExcludeAllTest(unittest.TestCase):
 
         self.assertRaises(LookUpError, Base.objects.exclude, "made_up")
 
+    def test_exclude_and_modify(self):
+        # Make sure a document with missing fields from exclude won't
+        # try to overwrite them
+
+        class EmbeddedDoc(EmbeddedDocument):
+            field = StringField(default='default')
+            list_field = ListField(StringField())
+
+        class Doc(Document):
+            excluded_field = StringField()
+            excluded_with_default_field = StringField(default='default')
+            excluded_embedded_field = EmbeddedDocumentField(EmbeddedDoc)
+            present_field = StringField()
+
+        Doc.drop_collection()
+        embedded_doc = EmbeddedDoc(field='v1', list_field=['v1'])
+        doc = Doc(excluded_field='v1', present_field='v1',
+                  excluded_with_default_field='v1',
+                  excluded_embedded_field=embedded_doc).save()
+
+        doc_ex = Doc.objects.exclude(
+            'excluded_field',
+            'excluded_with_default_field',
+            'excluded_embedded_field').get(id=doc.id)
+        doc_ex.present_field = 'v2'
+        doc_ex.save()
+
+        doc.reload()
+        self.assertEqual(doc.present_field, 'v2')
+        self.assertEqual(doc.excluded_field, 'v1')
+        self.assertEqual(doc.excluded_with_default_field, 'v1')
+        self.assertEqual(doc.excluded_embedded_field, embedded_doc)
+
+    def test_only_and_modify(self):
+        # Make sure a document with missing fields from only won't
+        # try to overwrite them
+
+        class EmbeddedDoc(EmbeddedDocument):
+            field = StringField(default='default')
+            list_field = ListField(StringField())
+
+        class Doc(Document):
+            excluded_field = StringField()
+            excluded_with_default_field = StringField(default='default')
+            excluded_embedded_field = EmbeddedDocumentField(EmbeddedDoc)
+            present_field = StringField()
+
+        Doc.drop_collection()
+        embedded_doc = EmbeddedDoc(field='v1', list_field=['v1'])
+        doc = Doc(excluded_field='v1', present_field='v1',
+                  excluded_with_default_field='v1',
+                  excluded_embedded_field=embedded_doc).save()
+
+        doc_ex = Doc.objects.only('present_field').get(id=doc.id)
+        doc_ex.present_field = 'v2'
+        doc_ex.save()
+
+        import pdb; pdb.set_trace()
+        doc.reload()
+        self.assertEqual(doc.present_field, 'v2')
+        self.assertEqual(doc.excluded_field, 'v1')
+        self.assertEqual(doc.excluded_with_default_field, 'v1')
+        self.assertEqual(doc.excluded_embedded_field, embedded_doc)
+
+
 if __name__ == '__main__':
     unittest.main()
