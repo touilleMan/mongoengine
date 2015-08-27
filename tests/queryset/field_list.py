@@ -399,7 +399,6 @@ class OnlyExcludeAllTest(unittest.TestCase):
         numbers = Numbers.objects.fields(embedded__n={"$slice": [-5, 10]}).get()
         self.assertEqual(numbers.embedded.n, [-5, -4, -3, -2, -1])
 
-
     def test_exclude_from_subclasses_docs(self):
 
         class Base(Document):
@@ -455,6 +454,30 @@ class OnlyExcludeAllTest(unittest.TestCase):
         self.assertEqual(doc.excluded_with_default_field, 'v1')
         self.assertEqual(doc.excluded_embedded_field, embedded_doc)
 
+    def test_exclude_and_modify_2(self):
+
+        class CrmNote(EmbeddedDocument):
+            text = StringField(required=True)
+            author_id = ObjectIdField()
+
+        class CrmData(EmbeddedDocument):
+            tags = ListField(StringField(min_length=2, max_length=20))
+            notes = ListField(EmbeddedDocumentField(CrmNote))
+
+        class User(Document):
+            email = StringField()
+            crm_data = EmbeddedDocumentField(CrmData, default=CrmData)
+
+        User.drop_collection()
+        user = User(email='victor.***',
+                    crm_data=CrmData(notes=[], tags=['test'])).save()
+        self.assertEqual(user.crm_data, CrmData(tags=['test'], notes=[]))
+        user_no_crm = User.objects.exclude('crm_data').get(email='victor.***')
+        self.assertEqual(user_no_crm.crm_data, CrmData(tags=[], notes=[]))
+        user_no_crm.save()
+        user.reload()
+        self.assertEqual(user.crm_data, CrmData(tags=['test'], notes=[]))
+
     def test_only_and_modify(self):
         # Make sure a document with missing fields from only won't
         # try to overwrite them
@@ -479,12 +502,35 @@ class OnlyExcludeAllTest(unittest.TestCase):
         doc_ex.present_field = 'v2'
         doc_ex.save()
 
-        import pdb; pdb.set_trace()
         doc.reload()
         self.assertEqual(doc.present_field, 'v2')
         self.assertEqual(doc.excluded_field, 'v1')
         self.assertEqual(doc.excluded_with_default_field, 'v1')
         self.assertEqual(doc.excluded_embedded_field, embedded_doc)
+
+    def test_only_and_modify_2(self):
+
+        class CrmNote(EmbeddedDocument):
+            text = StringField(required=True)
+            author_id = ObjectIdField()
+
+        class CrmData(EmbeddedDocument):
+            tags = ListField(StringField(min_length=2, max_length=20))
+            notes = ListField(EmbeddedDocumentField(CrmNote))
+
+        class User(Document):
+            email = StringField()
+            crm_data = EmbeddedDocumentField(CrmData, default=CrmData)
+
+        User.drop_collection()
+        user = User(email='victor.***',
+                    crm_data=CrmData(notes=[], tags=['test'])).save()
+        self.assertEqual(user.crm_data, CrmData(tags=['test'], notes=[]))
+        user_no_crm = User.objects.only('email').get(email='victor.***')
+        self.assertEqual(user_no_crm.crm_data, CrmData(tags=[], notes=[]))
+        user_no_crm.save()
+        user.reload()
+        self.assertEqual(user.crm_data, CrmData(tags=['test'], notes=[]))
 
 
 if __name__ == '__main__':
