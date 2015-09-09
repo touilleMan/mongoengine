@@ -1414,6 +1414,59 @@ class FieldTest(unittest.TestCase):
 
         Extensible.drop_collection()
 
+    def test_shadowed_db_field(self):
+        class Doc(Document):
+            shadowed_field = StringField(db_field='in_db_field')
+            crossed_shadowed_1 = StringField(db_field='crossed_shadowed_2')
+            crossed_shadowed_2 = StringField(db_field='crossed_shadowed_1')
+        Doc.drop_collection()
+
+        obj = Doc()
+        obj.save()
+        obj_id = obj.id
+        self.assertTrue(not hasattr(obj, 'in_db_field'))
+        self.assertEqual(obj.shadowed_field, None)
+
+        # Make sure invalid fields make the Doc crash
+        Doc.objects.update_one(__raw__={
+            "_id": obj_id,
+            "invalid_field": "bad",
+        })
+        self.assertRaises(FieldDoesNotExist, obj.reload)
+
+        # Same thing for a field with a name in the mongoengine document
+        Doc.objects.update_one(__raw__={
+            "_id": obj_id,
+            "shadowed_field": "bad"
+        })
+        self.assertRaises(FieldDoesNotExist, obj.reload)
+
+        # get and validate object
+        self.assertEqual(obj.shadowed_field, None)
+        self.assertEqual(obj.id, obj_id)
+        self.assertTrue(not hasattr(obj, 'in_db_field'))
+
+        # Add in good field
+        Doc.objects.update_one(__raw__={
+            "_id": obj_id,
+            "in_db_field": "good"
+        })
+
+        obj.reload()
+        self.assertEqual(obj.shadowed_field, 'good')
+        self.assertEqual(obj.id, obj_id)
+        self.assertTrue(not hasattr(obj, 'in_db_field'))
+
+        # Crossed shadowing should not be a trouble
+        Doc.objects.update_one(__raw__={
+            "_id": obj_id,
+            "crossed_shadowed_1": "I'm shadow 1 in db but 2 in engine !",
+            "crossed_shadowed_2": "I'm shadow 2 in db but 1 in engine !"
+        })
+        obj.reload()
+        self.assertEqual(obj.crossed_shadowed_2, "I'm shadow 1 in db but 2 in engine !")
+        self.assertEqual(obj.crossed_shadowed_1, "I'm shadow 2 in db but 1 in engine !")
+
     def test_embedded_mapfield_db_field(self):
 
         class Embedded(EmbeddedDocument):
