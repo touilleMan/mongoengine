@@ -125,6 +125,38 @@ class FieldTest(unittest.TestCase):
         User.drop_collection()
         Group.drop_collection()
 
+    def test_list_item_contains_no_dereference(self):
+        """Ensure that __contains__ dosen't need dereference.
+        """
+        class User(Document):
+            name = StringField()
+
+        class Group(Document):
+            members = ListField(ReferenceField(User, dbref=False))
+
+        User.drop_collection()
+        Group.drop_collection()
+
+        for i in xrange(1, 10):
+            user = User(name='user %s' % i)
+            user.save()
+
+        group = Group(members=User.objects)
+        group.save()
+        group.reload()  # Confirm reload works
+
+        with query_counter() as q:
+            self.assertEqual(q, 0)
+
+            group_obj = Group.objects.first()
+            self.assertEqual(q, 1)
+
+            user_obj = User.objects.first()
+            self.assertEqual(q, 2)
+
+            self.assertTrue(user_obj in group_obj.members)
+            self.assertEqual(q, 2)
+
     def test_list_item_dereference_dref_false_stores_as_type(self):
         """Ensure that DBRef items are stored as their type
         """
