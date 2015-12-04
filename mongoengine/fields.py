@@ -383,10 +383,24 @@ class DateTimeField(BaseField):
       need accurate microsecond support.
     """
 
+    def __init__(self, max_datetime=None, min_datetime=None, **kwargs):
+        self.max_datetime = max_datetime
+        self.min_datetime = min_datetime
+        super().__init__(**kwargs)
+
     def validate(self, value):
         new_value = self.to_mongo(value)
         if not isinstance(new_value, (datetime.datetime, datetime.date)):
             self.error(u'cannot parse date "%s"' % value)
+
+        if isinstance(value, datetime.date):
+            value = datetime.datetime(value.year, value.month, value.day)
+
+        if self.max_datetime is not None and value > self.max_datetime:
+            self.error(u'Date should not be younger than %s' % self.max_datetime.isoformat())
+
+        if self.min_datetime is not None and value < self.min_datetime:
+            self.error(u'Date should not be older than %s' % self.min_datetime.isoformat())
 
     def to_mongo(self, value):
         if value is None:

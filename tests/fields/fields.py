@@ -549,8 +549,10 @@ class FieldTest(unittest.TestCase):
     def test_datetime_validation(self):
         """Ensure that invalid values cannot be assigned to datetime fields.
         """
+        import pdb; pdb.set_trace()
         class LogEntry(Document):
-            time = DateTimeField()
+            time = DateTimeField(max_datetime=datetime.datetime(2200, 12, 31),
+                                 min_datetime=datetime.datetime(2000, 1, 1))
 
         log = LogEntry()
         log.time = datetime.datetime.now()
@@ -569,6 +571,10 @@ class FieldTest(unittest.TestCase):
         log.time = -1
         self.assertRaises(ValidationError, log.validate)
         log.time = 'ABC'
+        self.assertRaises(ValidationError, log.validate)
+        log.time = datetime.datetime(1999, 1, 1)
+        self.assertRaises(ValidationError, log.validate)
+        log.time = datetime.datetime(2201, 1, 1)
         self.assertRaises(ValidationError, log.validate)
 
     def test_datetime_tz_aware_mark_as_changed(self):
