@@ -22,7 +22,7 @@ before_install:
 - travis_retry sudo apt-get update
 - travis_retry sudo apt-get install mongodb-org-server
 # virtualenv>=14.0.0 has dropped Python 3.2 support
-- VIRTUAL_ENV_VERSION=`if ([ "$TRAVIS_PYTHON_VERSION" = '3.2' ]); then echo "<14.0.0"; fi
+- VIRTUAL_ENV_VERSION=`if ([ "$TRAVIS_PYTHON_VERSION" = '3.2' ]); then echo "<14.0.0"; fi`
 install:
 - sudo apt-get install python-dev python3-dev libopenjpeg-dev zlib1g-dev libjpeg-turbo8-dev
   libtiff4-dev libjpeg8-dev libfreetype6-dev liblcms2-dev libwebp-dev tcl8.5-dev tk8.5-dev
