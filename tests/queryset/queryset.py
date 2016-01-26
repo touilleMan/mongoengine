@@ -3123,6 +3123,31 @@ class QuerySetTest(unittest.TestCase):
         self.assertEqual(item.get_text_score(), max_text_score)
 
     @skip_older_mongodb
+    def test_inheritance_on_text_indexes(self):
+
+        class Book(Document):
+            title = StringField()
+            meta = {
+                "allow_inheritance": True,
+                "indexes": ["$title"]
+            }
+
+        class ShortStory(Book):
+            pass
+
+        class Novel(Book):
+            pass
+
+        Book.drop_collection()
+
+        ShortStory(title='To Build a Fire').save()
+        Novel(title='The Quest for Fire').save()
+
+        self.assertEqual(ShortStory.objects.search_text("Fire").count(), 1)
+        self.assertEqual(Novel.objects.search_text("Fire").count(), 1)
+        self.assertEqual(Book.objects.search_text("Fire").count(), 2)
+
+    @skip_older_mongodb
     def test_distinct_handles_references_to_alias(self):
         register_connection('testdb', 'mongoenginetest2')
 
